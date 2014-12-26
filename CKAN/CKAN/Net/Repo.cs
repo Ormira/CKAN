@@ -52,11 +52,53 @@ namespace CKAN
         }
 
         /// <summary>
+        ///     Same as Update, but does not clear the registry.
+        /// </summary>
+        /// <param name="registry_manager"></param>
+        /// <param name="ksp_version"></param>
+        /// <param name="repo"></param>
+        /// <returns>Number of unique modules after update</returns>
+        public static int Append(RegistryManager registry_manager, KSPVersion ksp_version, Uri repo = null)
+        {
+            // Use our default repo, unless we've been told otherwise.
+            if (repo == null)
+            {
+                repo = default_ckan_repo;
+            }
+
+            PopulateRegistry(repo, registry_manager.registry);
+
+            // Save our changes!
+            registry_manager.Save();
+
+            // Return how many we got!
+            return registry_manager.registry.Available(ksp_version).Count;
+        }
+
+        public static void Reset(Registry registry)
+        {
+            // Clear our list of known modules.
+            registry.ClearAvailable();
+        }
+
+        /// <summary>
         /// Updates the supplied registry from the URL given.
         /// This will *clear* the registry of available modules first.
         /// This does not *save* the registry. For that, you probably want Repo.Update
         /// </summary>
         internal static void UpdateRegistry(Uri repo, Registry registry)
+        {
+            Reset(registry);
+
+            PopulateRegistry(repo, registry);
+        }
+
+        /// <summary>
+        /// Updates the supplied registry from the URL given.
+        /// This will NOT *clear* the registry of available modules first.
+        /// This does not *save* the registry. For that, you probably want Repo.Update
+        /// </summary>
+        internal static void PopulateRegistry(Uri repo, Registry registry)
         {
             log.InfoFormat("Downloading {0}", repo);
 
@@ -64,9 +106,6 @@ namespace CKAN
 
             using (var zipfile = new ZipFile(repo_file))
             {
-                // Clear our list of known modules.
-                registry.ClearAvailable();
-
                 // Walk the archive, looking for .ckan files.
                 const string filter = @"\.ckan$";
 

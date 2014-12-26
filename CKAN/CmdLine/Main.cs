@@ -264,13 +264,15 @@ namespace CKAN.CmdLine
             {
                 Dictionary<string, Uri> repositories = registry_manager.registry.Repositories;
 
+                CKAN.Repo.Reset(registry_manager.registry);
+
                 // Some repos might fail, try to update as much as possible
                 foreach (KeyValuePair<string, Uri> repository in repositories)
                 {
                     try
                     {
                         // int updated = CKAN.Repo.Update(repository.Value);
-						int updated = CKAN.Repo.Update(registry_manager, current_instance.Version(), repository.Value);
+						int updated = CKAN.Repo.Append(registry_manager, current_instance.Version(), repository.Value);
                         user.RaiseMessage("Updated information on {0} available modules", updated);
                     }
                     catch (MissingCertificateKraken kraken)
